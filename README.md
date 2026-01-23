@@ -2,6 +2,14 @@
 
 This is a cookiecutter template for creating InOrbit connectors. It is used to generate the necessary files and directories for a new Edge Connector project.
 
+## Status
+
+Tested Python Versions: 3.10, 3.11, 3.12, 3.13
+
+This is all versions supported by https://github.com/inorbit-ai/inorbit-connector-python. If this is not the case, please open an issue.
+
+[![Test CookieCutter Template](https://github.com/inorbit-ai/inorbit-connector-cookiecutter/actions/workflows/test-cookiecutter.yml/badge.svg)](https://github.com/inorbit-ai/inorbit-connector-cookiecutter/actions/workflows/test-cookiecutter.yml)
+
 ## Getting Started
 
 1. Install the cookiecutter package:

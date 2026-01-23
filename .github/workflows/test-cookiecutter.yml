@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: 2026 InOrbit, Inc.
+#
+# SPDX-License-Identifier: MIT
+
+name: Test CookieCutter Template
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # Every Monday at midnight UTC
+  workflow_dispatch:  # Manual trigger
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Tested Python versions should match all Python versions supported by https://github.com/inorbit-ai/inorbit-connector-python
+        python-version: ['3.10', '3.11', '3.12', '3.13']
+      fail-fast: false
+    name: Test Python ${{ matrix.python-version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install cookiecutter
+        run: pip install cookiecutter
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Generate cookiecutter template
+        run: |
+          cookiecutter . \
+            --no-input \
+            -o /tmp \
+            python_version=${{ matrix.python-version }} \
+            use_current_directory=n
+
+      - name: Navigate to generated project and test
+        working-directory: /tmp/wall_e_fleet_connector
+        run: |
+          uv sync --extra=dev
+          uv run tox
