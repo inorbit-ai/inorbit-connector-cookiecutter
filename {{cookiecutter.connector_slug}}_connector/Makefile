@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: 2026 {{ cookiecutter.author }}
+#
+# SPDX-License-Identifier: MIT
+
+.PHONY: bump bump-patch bump-minor bump-major
+
+# Usage: make bump PART=patch|minor|major|alpha|beta|rc|post|dev|stable [DRY=1] [DIRTY=1]
+# Convenience targets: bump-patch, bump-minor, bump-major
+bump:
+	@set -euo pipefail; \
+	PART=$${PART:-patch}; \
+	DRY=$${DRY:-0}; \
+	DIRTY=$${DIRTY:-0}; \
+	if [ "$$DRY" != "0" ]; then \
+		uv version --bump $$PART --dry-run; \
+		exit 0; \
+	fi; \
+	if [ "$$DIRTY" = "0" ] && { ! git diff --quiet || ! git diff --cached --quiet; }; then \
+		echo "Working tree must be clean before bumping"; \
+		exit 1; \
+	fi; \
+	old_version=$$(uv version --short); \
+	uv version --bump $$PART; \
+	new_version=$$(uv version --short); \
+	git add pyproject.toml uv.lock; \
+	git commit -m "Bump {{ cookiecutter.project_slug }} version: $${old_version} → $${new_version}"; \
+	git tag -a "{{ cookiecutter.project_slug }}-v$${new_version}" -m "Bump {{ cookiecutter.project_slug }} version: $${old_version} → $${new_version}"; \
+	echo "Bumped version $$old_version → $$new_version"
+
+bump-patch:
+	@$(MAKE) bump PART=patch DRY=$${DRY:-0}
+
+bump-minor:
+	@$(MAKE) bump PART=minor DRY=$${DRY:-0}
+
+bump-major:
+	@$(MAKE) bump PART=major DRY=$${DRY:-0}
+

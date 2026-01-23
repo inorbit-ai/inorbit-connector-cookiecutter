@@ -1,0 +1,13 @@
+{
+    "connector_target": "Wall-E Fleet",
+    "connector_slug": "{{ cookiecutter.connector_target.lower().replace(' ', '_').replace('-', '_') }}",
+    "connector_slug_pascal": "{{ cookiecutter.connector_slug.replace('_', ' ').title().replace(' ', '') }}",
+    "project_slug": "{{ cookiecutter.connector_slug.replace('_', '-') }}-connector",
+    "description": "InOrbit Edge connector for {{ cookiecutter.connector_target }}",
+    "author": "InOrbit, Inc.",
+    "github_author": "inorbit-ai",
+    "email": "support@inorbit.ai",
+    "version": "0.1.0",
+    "python_version": "3.13",
+    "use_current_directory": "y"
+}

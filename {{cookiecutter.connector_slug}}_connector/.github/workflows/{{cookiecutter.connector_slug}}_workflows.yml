@@ -1,0 +1,98 @@
+# SPDX-FileCopyrightText: 2026 {{ cookiecutter.author }}
+#
+# SPDX-License-Identifier: MIT
+
+name: {{ cookiecutter.connector_target }} Connector Workflow
+
+# TODO: Replace [SOME REGISTRY] with the actual docker image registry
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint-and-test:
+    name: Lint and Test
+    runs-on: {% raw %}${{ matrix.os }}{% endraw %}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["{{ cookiecutter.python_version }}"]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Set up Python {% raw %}${{ matrix.python-version }}{% endraw %}
+        uses: actions/setup-python@v5
+        with:
+          python-version: {% raw %}${{ matrix.python-version }}{% endraw %}
+      - name: Install dependencies
+        run: uv sync --extra dev
+      - name: Test with tox
+        run: uv run tox
+
+  reuse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: REUSE Compliance Check
+        uses: fsfe/reuse-action@v6
+
+  publish-docker:
+    if: {% raw %}${{ contains(github.event.head_commit.message, 'Bump {% endraw %}{{ cookiecutter.project_slug }}{% raw %} version') }}{% endraw %}
+    needs: [lint-and-test, reuse]
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v5
+      - name: Read version from pyproject
+        id: version
+        uses: cssnr/toml-action@v1
+        with:
+          file: pyproject.toml
+          path: $.project.version
+      - name: Export version to env
+        run: |
+          echo "{{ cookiecutter.connector_slug.upper() }}_CONNECTOR_VERSION=${% raw %}{{ steps.version.outputs.value }}{% endraw %}" >> $GITHUB_ENV
+          echo "{{ cookiecutter.connector_slug.upper() }}_CONNECTOR_VERSION is '${% raw %}{{ steps.version.outputs.value }}{% endraw %}'"
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: [SOME REGISTRY]/connectors/{{ cookiecutter.connector_slug }}_connector
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${% raw %}{{ env.{% endraw %}{{ cookiecutter.connector_slug.upper() }}{% raw %}_CONNECTOR_VERSION }}{% endraw %}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Google Artifact Registry
+        uses: docker/login-action@v3
+        with:
+          registry: us-central1-docker.pkg.dev
+          username: _json_key
+          password: ${% raw %}{{ secrets.GAR_JSON_KEY }}{% endraw %}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          file: ./docker/Dockerfile
+          push: true
+          tags: ${% raw %}{{ steps.meta.outputs.tags }}{% endraw %}
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${% raw %}{{ env.{% endraw %}{{ cookiecutter.connector_slug.upper() }}{% raw %}_CONNECTOR_VERSION }}{% endraw %}
+          name: Release v${% raw %}{{ env.{% endraw %}{{ cookiecutter.connector_slug.upper() }}{% raw %}_CONNECTOR_VERSION }}{% endraw %}
+          body: |
+            Release v${% raw %}{{ env.{% endraw %}{{ cookiecutter.connector_slug.upper() }}{% raw %}_CONNECTOR_VERSION }}{% endraw %}
+
+            Docker image: `[SOME REGISTRY]/inorbit-integrations/connectors/{{ cookiecutter.connector_slug }}_connector:${% raw %}{{ env.{% endraw %}{{ cookiecutter.connector_slug.upper() }}{% raw %}_CONNECTOR_VERSION }}{% endraw %}`
+          draft: false
+          prerelease: false

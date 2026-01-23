@@ -1,0 +1,76 @@
+# SPDX-FileCopyrightText: 2026 {{ cookiecutter.author }}
+#
+# SPDX-License-Identifier: MIT
+
+[project]
+name = "{{ cookiecutter.project_slug }}"
+version = "{{ cookiecutter.version }}"
+description = "{{ cookiecutter.description }}"
+readme = "README.md"
+requires-python = ">={{ cookiecutter.python_version }}"
+dependencies = [
+    "inorbit-connector[system-stats]~=2.2.0", # TODO: Replace with the latest version from https://github.com/inorbit-ai/inorbit-connector-python
+    # Other runtime dependencies go here
+]
+
+[project.optional-dependencies]
+dev = [
+    # TODO: Make sure to replace with the latest version of the tools
+    "coverage~=7.11",
+    "pytest~=8.4",
+    "pytest-asyncio~=1.2",
+    "tox~=4.32",
+    "tox-uv~=1.29",
+    "colorlog~=6.10.1",
+    "ruff>=0.14.7",
+    "bump-my-version~=1.2.4",
+]
+
+[project.scripts]
+{{ cookiecutter.project_slug }} = "{{cookiecutter.connector_slug}}_connector.{{cookiecutter.connector_slug}}_connector:start"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["{{cookiecutter.connector_slug}}_connector"]
+
+[tool.coverage.run]
+source = ["{{cookiecutter.connector_slug}}_connector/"]
+
+[tool.coverage.report]
+fail_under = 0
+
+[tool.ruff]
+line-length = 100
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.tox]
+env_list = ["py{{ cookiecutter.python_version.replace('.', '') }}"]
+
+[tool.tox.gh]
+python = { "{{ cookiecutter.python_version }}" = "py{{ cookiecutter.python_version.replace('.', '') }}" }
+
+[tool.tox.env_run_base]
+extras = ["dev"]
+commands = [
+    [
+        "ruff",
+        "check",
+    ],
+    [
+        "coverage",
+        "run",
+        "-m",
+        "pytest",
+    ],
+    [
+        "coverage",
+        "html",
+        "-d",
+        "{envlogdir}/coverage",
+    ],
+]
