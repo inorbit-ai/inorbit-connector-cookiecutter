@@ -2,14 +2,12 @@
 #
 # SPDX-License-Identifier: MIT
 
-"""
-Test-wide fixtures for cookiecutter template tests.
-"""
+"""Test-wide fixtures for cookiecutter template tests."""
 
 from __future__ import annotations
 
-import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -35,20 +33,11 @@ def generated_project_dir(temp_dir, cookiecutter_template_dir):
     output_dir = temp_dir / "output"
     output_dir.mkdir()
 
-    # Run cookiecutter to generate a project
-    # Try to find cookiecutter in PATH, fall back to python -m cookiecutter
-    import shutil
-    import sys
-    
-    cookiecutter_path = shutil.which("cookiecutter")
-    if cookiecutter_path:
-        cookiecutter_cmd = [cookiecutter_path]
-    else:
-        # Fall back to python -m cookiecutter
-        cookiecutter_cmd = [sys.executable, "-m", "cookiecutter"]
-    
     result = subprocess.run(
-        cookiecutter_cmd + [
+        [
+            sys.executable,
+            "-m",
+            "cookiecutter",
             str(cookiecutter_template_dir),
             "--no-input",
             "-o",
@@ -61,9 +50,11 @@ def generated_project_dir(temp_dir, cookiecutter_template_dir):
         check=True,
     )
 
-    # Find the generated project directory
     generated_dir = output_dir / "wall_e_fleet_connector"
-    assert generated_dir.exists(), f"Generated project not found. Output: {result.stdout}\nError: {result.stderr}"
+    assert generated_dir.exists(), (
+        f"Generated project not found. "
+        f"Output: {result.stdout}\nError: {result.stderr}"
+    )
 
     return generated_dir
 
@@ -74,7 +65,6 @@ def git_repo(temp_dir):
     repo_dir = temp_dir / "git_repo"
     repo_dir.mkdir()
 
-    # Initialize git repository
     subprocess.run(
         ["git", "init"],
         cwd=repo_dir,
@@ -82,7 +72,6 @@ def git_repo(temp_dir):
         capture_output=True,
     )
 
-    # Configure git user (required for commits)
     subprocess.run(
         ["git", "config", "user.name", "Test User"],
         cwd=repo_dir,

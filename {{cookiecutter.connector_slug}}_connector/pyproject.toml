@@ -8,10 +8,30 @@ version = "{{ cookiecutter.version }}"
 description = "{{ cookiecutter.description }}"
 readme = "README.md"
 requires-python = ">={{ cookiecutter.python_version }}"
+license = { text = "MIT" }
+authors = [
+    { name = "{{ cookiecutter.author }}", email = "{{ cookiecutter.email }}" },
+]
+maintainers = [
+    { name = "{{ cookiecutter.author }}", email = "{{ cookiecutter.email }}" },
+]
+keywords = ["inorbit", "connector", "edge-connector", "robotics", "robops", "{{ cookiecutter.connector_slug }}"]
+classifiers = [
+    "Topic :: Scientific/Engineering",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: {{ cookiecutter.python_version }}",
+]
 dependencies = [
     "inorbit-connector[system-stats]~=2.2.0", # TODO: Replace with the latest version from https://github.com/inorbit-ai/inorbit-connector-python
     # Other runtime dependencies go here
 ]
+
+[project.urls]
+Homepage = "https://github.com/{{ cookiecutter.github_author }}/{{ cookiecutter.project_slug }}"
+Documentation = "https://github.com/{{ cookiecutter.github_author }}/{{ cookiecutter.project_slug }}#readme"
+Repository = "https://github.com/{{ cookiecutter.github_author }}/{{ cookiecutter.project_slug }}"
+Issues = "https://github.com/{{ cookiecutter.github_author }}/{{ cookiecutter.project_slug }}/issues"
 
 [project.optional-dependencies]
 dev = [

@@ -4,7 +4,7 @@
 
 # Reference: https://github.com/astral-sh/uv-docker-example/blob/main/multistage.Dockerfile
 
-FROM ghcr.io/astral-sh/uv:python-{{cookiecutter.python_version}}-bookworm-slim AS builder
+FROM ghcr.io/astral-sh/uv:python{{cookiecutter.python_version}}-bookworm-slim AS builder
 
 # Enable bytecode compilation and use copy mode
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy

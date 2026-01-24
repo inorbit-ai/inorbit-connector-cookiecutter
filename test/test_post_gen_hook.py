@@ -8,8 +8,6 @@ Tests for the post-generation hook.
 
 from __future__ import annotations
 
-import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -35,7 +33,7 @@ class TestFindAvailableBackupDir:
         assert not result.exists()
 
     def test_returns_numbered_backup_when_exists(self, temp_dir):
-        """Test that numbered backup directories are returned when repo.backup exists."""
+        """Test numbered backup dirs returned when repo.backup exists."""
         # Create repo.backup
         (temp_dir / "repo.backup").mkdir()
 
@@ -72,7 +70,8 @@ class TestBackupExistingFiles:
         assert (backup_dir / "existing_file.txt").exists()
         assert (backup_dir / "existing_file.txt").read_text() == "content"
         assert (backup_dir / "existing_dir").exists()
-        assert (backup_dir / "existing_dir" / "nested.txt").read_text() == "nested"
+        nested_file = backup_dir / "existing_dir" / "nested.txt"
+        assert nested_file.read_text() == "nested"
 
         # Check originals are gone
         assert not (temp_dir / "existing_file.txt").exists()
@@ -102,7 +101,8 @@ class TestBackupExistingFiles:
         assert backup_dir.exists()
         assert (backup_dir / "file.txt").exists()
         assert not (backup_dir / "generated_dir").exists()
-        assert (temp_dir / "generated_dir").exists()  # Original should still exist
+        # Original should still exist
+        assert (temp_dir / "generated_dir").exists()
 
     def test_excludes_existing_backup_directories(self, temp_dir):
         """Test that existing backup directories are not backed up."""
@@ -119,12 +119,15 @@ class TestBackupExistingFiles:
         assert not (backup_dir / "repo.backup.1").exists()
 
     def test_no_backup_when_no_files(self, temp_dir):
-        """Test that backup directory is created but empty when there are no files to backup."""
+        """Test backup dir created but empty when no files to backup."""
         backup_existing_files(temp_dir, "generated_dir")
         # The backup directory is created even if empty, but should be empty
         backup_dir = temp_dir / "repo.backup"
         if backup_dir.exists():
-            assert not any(backup_dir.iterdir()), "Backup directory should be empty when no files to backup"
+            error_msg = (
+                "Backup directory should be empty when no files to backup"
+            )
+            assert not any(backup_dir.iterdir()), error_msg
 
 
 class TestMoveItem:
@@ -251,7 +254,9 @@ class TestMoveDirectoryContents:
 class TestPostGenHookIntegration:
     """Integration tests for the post-gen hook as a script."""
 
-    def test_hook_runs_when_use_current_directory_is_y(self, temp_dir, cookiecutter_template_dir):
+    def test_hook_runs_when_use_current_directory_is_y(
+        self, temp_dir, cookiecutter_template_dir
+    ):
         """Test that hook executes when use_current_directory=y."""
         # Create a structure simulating cookiecutter output
         generated_dir = temp_dir / "wall_e_fleet_connector"
@@ -269,38 +274,37 @@ class TestPostGenHookIntegration:
         parent.mkdir()
         (parent / "existing.txt").write_text("existing")
 
-        # Simulate hook execution by changing to generated_dir and running hook
-        hook_path = cookiecutter_template_dir / "hooks" / "post_gen_project.py"
-
-        # We need to modify the hook to accept parameters or test it differently
-        # For integration test, we'll test the functions directly with proper setup
+        # For integration test, test functions directly with proper setup
         # Move to parent and simulate the hook's behavior
         backup_existing_files(parent, "wall_e_fleet_connector")
         move_directory_contents(generated_dir, parent)
 
         # Verify files were moved
         assert (parent / "README.md").exists()
-        # The nested directory contents are lifted to the source directory level.
-        # Since the nested directory is skipped in the first move loop, its contents
-        # are lifted to generated_dir after the initial move, so they remain in generated_dir.
-        # In the actual hook usage, this is fine because generated_dir IS the current directory
-        # and everything ends up in the right place. For this test, we verify:
+        # The nested directory contents are lifted to the source level.
+        # Since the nested directory is skipped in the first move loop,
+        # its contents are lifted to generated_dir after the initial move,
+        # so they remain in generated_dir. In the actual hook usage,
+        # this is fine because generated_dir IS the current directory
+        # and everything ends up in the right place. For this test:
         # 1. Regular files were moved to parent
         # 2. Nested directory contents were lifted to generated_dir level
         assert (generated_dir / "src" / "connector.py").exists()
         # Existing file should be backed up
-        assert (parent / "repo.backup" / "existing.txt").exists()
+        backup_file = parent / "repo.backup" / "existing.txt"
+        assert backup_file.exists()
         # Original existing.txt should be gone (backed up)
         assert not (parent / "existing.txt").exists()
 
-    def test_hook_does_not_run_when_use_current_directory_is_n(self, temp_dir):
-        """Test that hook does not execute when use_current_directory=n."""
-        # When use_current_directory=n, the hook should not run
-        # This is tested by the fact that cookiecutter generates to a separate directory
-        # and the hook checks the cookiecutter variable
-        # We can verify this by checking that the hook script exits early
-        hook_path = Path(__file__).parent.parent / "hooks" / "post_gen_project.py"
-
-        # The hook checks "{{ cookiecutter.use_current_directory }}" which is a template variable
-        # When rendered with use_current_directory=n, it should not execute
-        # This is more of a cookiecutter behavior test, which is covered by the workflow
+    def test_hook_does_not_run_when_use_current_directory_is_n(
+        self, temp_dir
+    ):
+        """Test hook does not execute when use_current_directory=n."""
+        # When use_current_directory=n, the hook should not run.
+        # This is tested by the fact that cookiecutter generates to a
+        # separate directory and the hook checks the cookiecutter variable.
+        # The hook checks "{{ cookiecutter.use_current_directory }}"
+        # which is a template variable. When rendered with
+        # use_current_directory=n, it should not execute.
+        # This is more of a cookiecutter behavior test, covered by workflow.
+        # No assertion needed - this test documents the expected behavior.

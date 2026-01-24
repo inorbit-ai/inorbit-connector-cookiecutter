@@ -24,8 +24,14 @@ These versions match all Python versions supported by [inorbit-connector-python]
 
 ### Prerequisites
 
+To utilize the cookiecutter:
+- [pipx](https://pipx.pypa.io/) for running cookiecutter
+
+To use the generated project:
 - Python 3.10 or later
-- [pipx](https://pipx.pypa.io/) (recommended) or pip
+- [uv](https://docs.astral.sh/uv/getting-started/installation/)
+- [git](https://git-scm.com/downloads)
+- [make](https://www.gnu.org/software/make/) (optional)
 
 ### Generate a New Connector
 
@@ -74,7 +80,11 @@ The template generates a complete Python package with:
   - Example environment file (`.env`)
   - Example fleet configuration (YAML file)
   - [`ruff`](https://docs.astral.sh/ruff/) configuration for code linting and formatting
-  - Makefile for version bumping and testing
+  - A Makefile for version bumping which:
+    - Requires no external dependencies other than `uv` and `git`
+    - Supports dry-run mode and checking for a clean working tree
+    - Uses `uv version` to bump the version in `pyproject.toml` and `uv.lock`
+    - Creates a commit and a tag with the new version following the rules that trigger the publish job in the GitHub Actions workflow
 
 - **Testing**:
   - Pytest configuration
@@ -104,20 +114,14 @@ This cookiecutter template includes tests to verify the post-generation hook and
 
 ### Running Tests
 
-1. Create and activate a virtual environment:
+1. Install dependencies using `uv`:
    ```bash
-   python -m venv venv
-   source venv/bin/activate
+   uv sync --extra=dev
    ```
 
-2. Install test dependencies:
+2. Run the tests:
    ```bash
-   pip install -e ".[dev]"
-   ```
-
-3. Run the tests:
-   ```bash
-   pytest tests/ -v
+   uv run pytest tests/ -v
    ```
 
 ### Test Requirements
