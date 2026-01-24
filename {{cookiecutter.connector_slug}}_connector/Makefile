@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+SHELL := /bin/bash
+
 .PHONY: bump bump-patch bump-minor bump-major
 
 # Usage: make bump PART=patch|minor|major|alpha|beta|rc|post|dev|stable [DRY=1] [DIRTY=1]
