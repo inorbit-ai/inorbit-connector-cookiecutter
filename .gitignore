@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 InOrbit, Inc.
+#
+# SPDX-License-Identifier: MIT
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+.coverage
+.tox/
+
+# Virtual environments
+.venv/
+venv/

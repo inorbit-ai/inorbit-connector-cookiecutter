@@ -8,13 +8,11 @@ This is a [cookiecutter](https://cookiecutter.readthedocs.io/) template for crea
 
 ## Features
 
-- **Standardized Project Structure**: Consistent layout for all InOrbit connectors
-- **Configuration Management**: Pydantic-based configuration models with environment variable support
-- **Testing Framework**: Pre-configured pytest and tox setup
-- **Docker Support**: Ready-to-use Dockerfile and docker-compose examples
 - **CI/CD Ready**: GitHub Actions workflow templates included
 - **Type Safety**: Full type hints and mypy support
 - **Code Quality**: Pre-configured ruff, coverage, and tox setup
+- **Docker Support**: Ready-to-use Dockerfile and docker-compose examples
+- **Standardized Project Structure**: Consistent layout for all InOrbit connectors
 
 ## Status
 
@@ -45,7 +43,7 @@ pipx run cookiecutter gh:inorbit-ai/inorbit-connector-cookiecutter
    - **email**: Contact email
    - **version**: Initial version (default: 0.1.0)
    - **python_version**: Minimum Python version (default: 3.13)
-   - **use_current_directory**: Whether to generate in current directory (default: y)
+   - **use_current_directory**: Whether to generate in current directory (good for running within empty repositories) (default: y)
 
 3. Navigate to the generated project and install dependencies:
 
@@ -53,6 +51,8 @@ pipx run cookiecutter gh:inorbit-ai/inorbit-connector-cookiecutter
 cd <your-connector-name>-connector
 uv sync --extra=dev
 ```
+
+Refer to the official documentation for installing `uv`: https://docs.astral.sh/uv/getting-started/installation/
 
 4. Run tests to verify everything works:
 
@@ -64,22 +64,24 @@ uv run tox
 
 The template generates a complete Python package with:
 
-- **Source Code Structure**:
-  - Connector implementation with base class inheritance
-  - Configuration models with validation
+- **Sample source code structure**:
+  - Sample connector implementation with base class inheritance
+  - Sample configuration models with validation
   - Entry point script
 
-- **Configuration Files**:
+- **Configuration files**:
   - `pyproject.toml` with dependencies and tool configurations
   - Example environment file (`.env`)
-  - Example fleet configuration (YAML)
+  - Example fleet configuration (YAML file)
+  - [`ruff`](https://docs.astral.sh/ruff/) configuration for code linting and formatting
+  - Makefile for version bumping and testing
 
 - **Testing**:
   - Pytest configuration
   - Example test files
-  - Tox configuration for multiple Python versions
+  - [`tox`](https://tox.wiki/en/4.34.1/) configuration for automated linting and testing
 
-- **Docker Support**:
+- **Docker packaging**:
   - Multi-stage Dockerfile
   - Docker Compose example
   - Build scripts
@@ -88,9 +90,48 @@ The template generates a complete Python package with:
   - README template
   - Contributing guidelines
   - License files
+  - REUSE compliance configuration
 
 - **CI/CD**:
-  - GitHub Actions workflow template
+  - GitHub Actions workflow template for:
+    - Linting and testing
+    - REUSE compliance checking
+    - Docker build and push
+
+## Testing
+
+This cookiecutter template includes tests to verify the post-generation hook and Makefile functionality.
+
+### Running Tests
+
+1. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate
+   ```
+
+2. Install test dependencies:
+   ```bash
+   pip install -e ".[dev]"
+   ```
+
+3. Run the tests:
+   ```bash
+   pytest tests/ -v
+   ```
+
+### Test Requirements
+
+The tests require:
+- `pytest` - Test framework
+- `git` - For testing version bump functionality
+- `make` - For testing Makefile commands
+- `uv` - For testing version bumping (used by the Makefile)
+
+### Test Coverage
+
+- **Post-generation hook tests**: Verify file movement, backup functionality, nested directory handling, and git exclusion
+- **Version bump tests**: Verify version bumping, dry-run mode, git integration, and clean working tree requirements
 
 ## Contributing
 
