@@ -26,6 +26,7 @@ echo "Building Docker image '$IMAGE_NAME'..."
 
 cd "$REPO_ROOT_DIR"
 
+set +e
 CONNECTOR_VERSION=$(
 python - <<'PY'
 import pathlib
@@ -36,6 +37,10 @@ data = tomllib.loads(pyproject.read_text())
 print(data["project"]["version"])
 PY
 )
+if [ $? -ne 0 ]; then
+    CONNECTOR_VERSION="latest"
+fi
+set -e
 
 docker build \
     -t $IMAGE_NAME:latest \
