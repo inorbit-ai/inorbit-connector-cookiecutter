@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Test CookieCutter Template](https://github.com/inorbit-ai/inorbit-connector-cookiecutter/actions/workflows/test-cookiecutter.yml/badge.svg)](https://github.com/inorbit-ai/inorbit-connector-cookiecutter/actions/workflows/test-cookiecutter.yml)
+[![Test CookieCutter Template](https://github.com/inorbit-ai/inorbit-connector-cookiecutter/actions/workflows/test-cookiecutter.yml/badge.svg?branch=main)](https://github.com/inorbit-ai/inorbit-connector-cookiecutter/actions/workflows/test-cookiecutter.yml)
 
 This is a [cookiecutter](https://cookiecutter.readthedocs.io/) template for creating InOrbit connectors. It generates the necessary files and directories for a new Edge Connector project with a standardized structure, configuration, and testing setup.
 
