@@ -9,7 +9,7 @@ SPDX-License-Identifier: MIT
 > The contents below serve as a template for a README.md file.
 >
 > The following is a to-do list for the user to review after generating the project:
-> - [ ] Run `uv sync --extra=dev` if the post gen hook didn't already to create a virtual environment, install dependencies and, most importantly, generate a `uv.lock` file that must be added to versin control.
+> - [ ] Run `uv lock` if the post gen hook didn't already to generate a `uv.lock`. It is recommended to add this file to version control.
 > - [ ] Revise the contents of:
 >   - `README.md`
 >   - `CONTRIBUTING.md`

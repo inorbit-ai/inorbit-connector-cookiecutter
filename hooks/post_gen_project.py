@@ -1,10 +1,36 @@
 import shutil
-from pathlib import Path
+import subprocess
 import sys
+from pathlib import Path
 
 """
 Post-generation hook to move the generated connector to the current directory.
 """
+
+
+def run_uv_lock(project_dir: Path) -> None:
+    """
+    Run uv lock in the project directory if uv is available.
+    If uv is not available, print a message and continue.
+    """
+    uv_path = shutil.which("uv")
+    if uv_path is None:
+        print("uv not found in PATH, skipping uv lock")
+        return
+
+    print("Running uv lock...")
+    try:
+        subprocess.run(
+            [uv_path, "lock"],
+            cwd=project_dir,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        print("uv lock completed successfully")
+    except subprocess.CalledProcessError as e:
+        print(f"Warning: uv lock failed: {e}")
+        print("Continuing with file operations...")
 
 
 def find_available_backup_dir(dst: Path) -> Path:
@@ -110,6 +136,7 @@ if __name__ == "__main__":
             src = Path.cwd()
             dst = src.parent
 
+            run_uv_lock(src)
             backup_existing_files(dst, src.name)
             move_directory_contents(src, dst)
         except Exception as e:
