@@ -8,14 +8,10 @@ Tests for the post-generation hook.
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
 import pytest
 
 # Import hook functions directly for unit testing
-sys.path.insert(0, str(Path(__file__).parent.parent / "hooks"))
-from post_gen_project import (
+from hooks.post_gen_project import (
     backup_existing_files,
     find_available_backup_dir,
     move_directory_contents,
@@ -281,30 +277,10 @@ class TestPostGenHookIntegration:
 
         # Verify files were moved
         assert (parent / "README.md").exists()
-        # The nested directory contents are lifted to the source level.
-        # Since the nested directory is skipped in the first move loop,
-        # its contents are lifted to generated_dir after the initial move,
-        # so they remain in generated_dir. In the actual hook usage,
-        # this is fine because generated_dir IS the current directory
-        # and everything ends up in the right place. For this test:
-        # 1. Regular files were moved to parent
-        # 2. Nested directory contents were lifted to generated_dir level
         assert (generated_dir / "src" / "connector.py").exists()
         # Existing file should be backed up
         backup_file = parent / "repo.backup" / "existing.txt"
         assert backup_file.exists()
         # Original existing.txt should be gone (backed up)
         assert not (parent / "existing.txt").exists()
-
-    def test_hook_does_not_run_when_use_current_directory_is_n(
-        self, temp_dir
-    ):
-        """Test hook does not execute when use_current_directory=n."""
-        # When use_current_directory=n, the hook should not run.
-        # This is tested by the fact that cookiecutter generates to a
-        # separate directory and the hook checks the cookiecutter variable.
-        # The hook checks "{{ cookiecutter.use_current_directory }}"
-        # which is a template variable. When rendered with
-        # use_current_directory=n, it should not execute.
-        # This is more of a cookiecutter behavior test, covered by workflow.
-        # No assertion needed - this test documents the expected behavior.
+        assert (parent / "repo.backup" / "existing.txt").exists()
