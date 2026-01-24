@@ -42,7 +42,7 @@ jobs:
               run: uv sync --extra=dev
 
             - name: Run cookiecutter tests
-              run: uv run pytest tests/ -v
+              run: uv run pytest -v
 
             - name: Generate cookiecutter template
               run: |
@@ -57,3 +57,8 @@ jobs:
               run: |
                   uv sync --extra=dev
                   uv run tox
+
+            - name: Test Docker image build
+              working-directory: /tmp/wall_e_fleet_connector
+              run: |
+                  ./docker/build.sh
