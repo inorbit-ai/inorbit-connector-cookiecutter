@@ -12,7 +12,6 @@ import pytest
 
 # Import hook functions directly for unit testing
 from hooks.post_gen_project import (
-    backup_existing_files,
     find_available_backup_dir,
     move_directory_contents,
     move_item,
@@ -46,84 +45,6 @@ class TestFindAvailableBackupDir:
         result = find_available_backup_dir(temp_dir)
         assert result == temp_dir / "repo.backup.3"
         assert not result.exists()
-
-
-class TestBackupExistingFiles:
-    """Test the backup_existing_files function."""
-
-    def test_backs_up_existing_files(self, temp_dir):
-        """Test that existing files are backed up."""
-        # Create some files to backup
-        (temp_dir / "existing_file.txt").write_text("content")
-        (temp_dir / "existing_dir").mkdir()
-        (temp_dir / "existing_dir" / "nested.txt").write_text("nested")
-
-        backup_existing_files(temp_dir, "generated_dir")
-
-        # Check backup was created
-        backup_dir = temp_dir / "repo.backup"
-        assert backup_dir.exists()
-        assert (backup_dir / "existing_file.txt").exists()
-        assert (backup_dir / "existing_file.txt").read_text() == "content"
-        assert (backup_dir / "existing_dir").exists()
-        nested_file = backup_dir / "existing_dir" / "nested.txt"
-        assert nested_file.read_text() == "nested"
-
-        # Check originals are gone
-        assert not (temp_dir / "existing_file.txt").exists()
-        assert not (temp_dir / "existing_dir").exists()
-
-    def test_excludes_git_directory(self, temp_dir):
-        """Test that .git directory is not backed up."""
-        (temp_dir / ".git").mkdir()
-        (temp_dir / "file.txt").write_text("content")
-
-        backup_existing_files(temp_dir, "generated_dir")
-
-        backup_dir = temp_dir / "repo.backup"
-        assert backup_dir.exists()
-        assert (backup_dir / "file.txt").exists()
-        assert not (backup_dir / ".git").exists()
-        assert (temp_dir / ".git").exists()  # Original should still exist
-
-    def test_excludes_generated_source_directory(self, temp_dir):
-        """Test that the generated source directory is not backed up."""
-        (temp_dir / "generated_dir").mkdir()
-        (temp_dir / "file.txt").write_text("content")
-
-        backup_existing_files(temp_dir, "generated_dir")
-
-        backup_dir = temp_dir / "repo.backup"
-        assert backup_dir.exists()
-        assert (backup_dir / "file.txt").exists()
-        assert not (backup_dir / "generated_dir").exists()
-        # Original should still exist
-        assert (temp_dir / "generated_dir").exists()
-
-    def test_excludes_existing_backup_directories(self, temp_dir):
-        """Test that existing backup directories are not backed up."""
-        (temp_dir / "repo.backup").mkdir()
-        (temp_dir / "repo.backup.1").mkdir()
-        (temp_dir / "file.txt").write_text("content")
-
-        backup_existing_files(temp_dir, "generated_dir")
-
-        backup_dir = temp_dir / "repo.backup.2"
-        assert backup_dir.exists()
-        assert (backup_dir / "file.txt").exists()
-        assert not (backup_dir / "repo.backup").exists()
-        assert not (backup_dir / "repo.backup.1").exists()
-
-    def test_no_backup_when_no_files(self, temp_dir):
-        """Test backup dir created but empty when no files to backup."""
-        backup_existing_files(temp_dir, "generated_dir")
-        # The backup directory is created even if empty, but should be empty
-        backup_dir = temp_dir / "repo.backup"
-        if backup_dir.exists():
-            error_msg = (
-                "Backup directory should be empty when no files to backup"
-            )
-            assert not any(backup_dir.iterdir()), error_msg
 
 
 class TestMoveItem:
@@ -246,6 +167,129 @@ class TestMoveDirectoryContents:
         assert dst.exists()
         assert (dst / "file.txt").exists()
 
+    def test_backs_up_conflicting_files(self, temp_dir):
+        """Test that existing files in dst are backed up when overwritten."""
+        src = temp_dir / "source"
+        src.mkdir()
+        (src / "README.md").write_text("new readme")
+        (src / "config").mkdir()
+        (src / "config" / "example.yaml").write_text("new config")
+
+        dst = temp_dir / "dest"
+        dst.mkdir()
+        (dst / "README.md").write_text("old readme")
+        (dst / "config").mkdir()
+        (dst / "config" / "example.yaml").write_text("old config")
+
+        move_directory_contents(src, dst)
+
+        # New content should be in place
+        assert (dst / "README.md").read_text() == "new readme"
+        assert (dst / "config" / "example.yaml").read_text() == "new config"
+
+        # Old content should be backed up
+        backup_dir = dst / "repo.backup"
+        assert backup_dir.exists()
+        assert (backup_dir / "README.md").read_text() == "old readme"
+        assert (backup_dir / "config" / "example.yaml").read_text() == "old config"
+
+    def test_leaves_non_conflicting_items_untouched(self, temp_dir):
+        """Test that items in dst not present in src are left alone."""
+        src = temp_dir / "source"
+        src.mkdir()
+        (src / "README.md").write_text("new readme")
+
+        dst = temp_dir / "dest"
+        dst.mkdir()
+        (dst / "README.md").write_text("old readme")
+        (dst / ".claude").mkdir()
+        (dst / ".claude" / "skills").mkdir()
+        (dst / ".claude" / "skills" / "connector.md").write_text("skill")
+        (dst / ".vscode").mkdir()
+        (dst / ".vscode" / "settings.json").write_text("{}")
+
+        move_directory_contents(src, dst)
+
+        # Non-conflicting items should be untouched
+        assert (dst / ".claude" / "skills" / "connector.md").read_text() == "skill"
+        assert (dst / ".vscode" / "settings.json").read_text() == "{}"
+
+        # They should NOT appear in backup
+        backup_dir = dst / "repo.backup"
+        assert not (backup_dir / ".claude").exists()
+        assert not (backup_dir / ".vscode").exists()
+
+    def test_preserves_dot_prefixed_items(self, temp_dir):
+        """Test that dot-prefixed items are never backed up or overwritten."""
+        src = temp_dir / "source"
+        src.mkdir()
+        (src / "file.txt").write_text("content")
+        # Generated output also has a .claude dir (conflict scenario)
+        (src / ".claude").mkdir()
+        (src / ".claude" / "generated.md").write_text("generated")
+        (src / ".github").mkdir()
+        (src / ".github" / "workflows").mkdir()
+
+        dst = temp_dir / "dest"
+        dst.mkdir()
+        (dst / ".git").mkdir()
+        (dst / ".git" / "HEAD").write_text("ref: refs/heads/main")
+        (dst / ".claude").mkdir()
+        (dst / ".claude" / "skills").mkdir()
+        (dst / ".claude" / "skills" / "dev.md").write_text("# AI skill")
+        (dst / ".github").mkdir()
+        (dst / ".github" / "CODEOWNERS").write_text("* @team")
+
+        move_directory_contents(src, dst)
+
+        # .git preserved
+        assert (dst / ".git" / "HEAD").read_text() == "ref: refs/heads/main"
+        # .claude preserved (not replaced by generated .claude)
+        assert (dst / ".claude" / "skills" / "dev.md").read_text() == "# AI skill"
+        # .github preserved
+        assert (dst / ".github" / "CODEOWNERS").read_text() == "* @team"
+        # Regular file still moved
+        assert (dst / "file.txt").read_text() == "content"
+        # Nothing dot-prefixed in backup
+        backup = dst / "repo.backup"
+        if backup.exists():
+            assert not (backup / ".git").exists()
+            assert not (backup / ".claude").exists()
+            assert not (backup / ".github").exists()
+
+    def test_no_backup_dir_when_no_conflicts(self, temp_dir):
+        """Test that no backup directory is created when there are no conflicts."""
+        src = temp_dir / "source"
+        src.mkdir()
+        (src / "new_file.txt").write_text("new")
+
+        dst = temp_dir / "dest"
+        dst.mkdir()
+        (dst / "existing_file.txt").write_text("existing")
+
+        move_directory_contents(src, dst)
+
+        assert not (dst / "repo.backup").exists()
+        # Both files should coexist
+        assert (dst / "new_file.txt").read_text() == "new"
+        assert (dst / "existing_file.txt").read_text() == "existing"
+
+    def test_backup_numbering_with_existing_backups(self, temp_dir):
+        """Test that backup uses next available number."""
+        src = temp_dir / "source"
+        src.mkdir()
+        (src / "file.txt").write_text("new")
+
+        dst = temp_dir / "dest"
+        dst.mkdir()
+        (dst / "file.txt").write_text("old")
+        (dst / "repo.backup").mkdir()
+        (dst / "repo.backup.1").mkdir()
+
+        move_directory_contents(src, dst)
+
+        assert (dst / "repo.backup.2" / "file.txt").read_text() == "old"
+
 
 class TestPostGenHookIntegration:
     """Integration tests for the post-gen hook as a script."""
@@ -253,34 +297,43 @@ class TestPostGenHookIntegration:
     def test_hook_runs_when_use_current_directory_is_y(
         self, temp_dir, cookiecutter_template_dir
     ):
-        """Test that hook executes when use_current_directory=y."""
+        """Test full hook behavior: move with backup, preserving unrelated items."""
         # Create a structure simulating cookiecutter output
         generated_dir = temp_dir / "wall_e_fleet_connector"
         generated_dir.mkdir()
         (generated_dir / "README.md").write_text("# Generated Project")
+        (generated_dir / "pyproject.toml").write_text("[project]")
 
-        # Create nested structure
+        # Create nested structure (inner package dir)
         nested = generated_dir / "wall_e_fleet_connector"
         nested.mkdir()
         (nested / "src").mkdir()
         (nested / "src" / "connector.py").write_text("# Connector code")
 
-        # Create parent directory with existing files
+        # Create parent directory with existing files (simulating template repo)
         parent = temp_dir / "parent"
         parent.mkdir()
-        (parent / "existing.txt").write_text("existing")
+        (parent / "README.md").write_text("# Old README")
+        (parent / "LICENSE").write_text("MIT")
+        (parent / ".claude").mkdir()
+        (parent / ".claude" / "skills").mkdir()
+        (parent / ".claude" / "skills" / "dev.md").write_text("# AI skill")
 
-        # For integration test, test functions directly with proper setup
-        # Move to parent and simulate the hook's behavior
-        backup_existing_files(parent, "wall_e_fleet_connector")
         move_directory_contents(generated_dir, parent)
 
-        # Verify files were moved
-        assert (parent / "README.md").exists()
+        # Generated files should be in place
+        assert (parent / "README.md").read_text() == "# Generated Project"
+        assert (parent / "pyproject.toml").read_text() == "[project]"
+        # Nested contents should be lifted
         assert (generated_dir / "src" / "connector.py").exists()
-        # Existing file should be backed up
-        backup_file = parent / "repo.backup" / "existing.txt"
-        assert backup_file.exists()
-        # Original existing.txt should be gone (backed up)
-        assert not (parent / "existing.txt").exists()
-        assert (parent / "repo.backup" / "existing.txt").exists()
+
+        # Conflicting README should be backed up
+        assert (parent / "repo.backup" / "README.md").read_text() == "# Old README"
+
+        # Non-conflicting LICENSE should be untouched (not backed up)
+        assert (parent / "LICENSE").read_text() == "MIT"
+        assert not (parent / "repo.backup" / "LICENSE").exists()
+
+        # .claude should be completely untouched
+        assert (parent / ".claude" / "skills" / "dev.md").read_text() == "# AI skill"
+        assert not (parent / "repo.backup" / ".claude").exists()

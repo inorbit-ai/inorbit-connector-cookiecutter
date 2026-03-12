@@ -7,6 +7,10 @@ from pathlib import Path
 Post-generation hook to move the generated connector to the current directory.
 """
 
+# Dot-prefixed items (e.g. .git, .claude, .github, .gitignore, .env) in the destination
+# are never backed up or overwritten. This preserves repository metadata, AI skills,
+# CI configuration, and other dot-files that the user may have customized.
+
 
 def run_uv_lock(project_dir: Path) -> None:
     """
@@ -50,39 +54,6 @@ def find_available_backup_dir(dst: Path) -> Path:
         counter += 1
 
 
-def backup_existing_files(dst: Path, src_dir_name: str):
-    """
-    Backup existing files in destination directory to repo.backup/.
-    Uses numbered suffixes (repo.backup.1, repo.backup.2, etc.) if needed.
-    Excludes .git/ directory and the generated source directory.
-    """
-    backup_dir = find_available_backup_dir(dst)
-    backup_dir.mkdir(parents=True, exist_ok=True)
-
-    items_to_backup = []
-    for item in dst.iterdir():
-        if item.name == ".git" or item.name == src_dir_name:
-            continue
-        if item.name.startswith("repo.backup"):
-            continue
-        items_to_backup.append(item)
-
-    if not items_to_backup:
-        return
-
-    print(f"Backing up existing files to {backup_dir}")
-    for item in items_to_backup:
-        backup_item = backup_dir / item.name
-        print(f"  Backing up {item.name}")
-
-        if item.is_dir():
-            shutil.copytree(item, backup_item, copy_function=shutil.copy2)
-            shutil.rmtree(item)
-        else:
-            shutil.copy2(item, backup_item)
-            item.unlink()
-
-
 def move_item(src_item: Path, dst_item: Path):
     """Move a single file or directory from src to dst."""
     if src_item.is_dir():
@@ -91,7 +62,7 @@ def move_item(src_item: Path, dst_item: Path):
                 src_item,
                 dst_item,
                 dirs_exist_ok=True,
-                copy_function=shutil.copy2
+                copy_function=shutil.copy2,
             )
         else:
             shutil.copytree(src_item, dst_item, copy_function=shutil.copy2)
@@ -102,9 +73,15 @@ def move_item(src_item: Path, dst_item: Path):
 
 
 def move_directory_contents(src: Path, dst: Path):
-    """
-    Move contents from src directory to dst directory, handling nested
-    directories with the same name as src.
+    """Move contents from src directory to dst directory.
+
+    Handles nested directories with the same name as src by lifting their
+    contents up one level.
+
+    Any existing items in dst that would be overwritten are backed up to
+    a repo.backup/ directory first. Items not present in the generated output
+    are left untouched. Dot-prefixed items (.git, .claude, .github, etc.)
+    that already exist in dst are never backed up or overwritten.
     """
     if not src.is_dir():
         raise ValueError(f"Source path {src} is not a directory")
@@ -112,21 +89,44 @@ def move_directory_contents(src: Path, dst: Path):
     if not dst.exists():
         dst.mkdir(parents=True, exist_ok=True)
 
+    backup_dir = None
+
+    def _backup(target: Path):
+        """Back up an existing item before it gets overwritten."""
+        nonlocal backup_dir
+        if backup_dir is None:
+            backup_dir = find_available_backup_dir(dst)
+            backup_dir.mkdir(parents=True)
+            print(f"Backing up existing files to {backup_dir}")
+        print(f"  Backing up {target.name}")
+        move_item(target, backup_dir / target.name)
+
+    def _move(item: Path, target_dir: Path):
+        """Move an item, backing up any existing conflict first.
+
+        Dot-prefixed items (.git, .claude, .github, etc.) that already exist in
+        the target directory are preserved — they are never backed up or overwritten.
+        """
+        target = target_dir / item.name
+        if target.exists() and target.name.startswith("."):
+            print(f"Preserving {target.name}")
+            return
+        if target.exists():
+            _backup(target)
+        print(f"Moving {item.name} to {target_dir}")
+        move_item(item, target)
+
     inner_dir = src / src.name
 
     for item in src.iterdir():
         if item.name == src.name and item.is_dir():
             continue
-
-        print(f"Moving {item.name} to {dst}")
-        move_item(item, dst / item.name)
+        _move(item, dst)
 
     if inner_dir.exists() and inner_dir.is_dir():
         print(f"Lifting contents of {inner_dir.name}/ up into {src.name}/")
         for item in inner_dir.iterdir():
-            print(f"  Moving {item.name} to {src}")
-            move_item(item, src / item.name)
-
+            _move(item, src)
         inner_dir.rmdir()
 
 
@@ -137,7 +137,6 @@ if __name__ == "__main__":
             dst = src.parent
 
             run_uv_lock(src)
-            backup_existing_files(dst, src.name)
             move_directory_contents(src, dst)
         except Exception as e:
             print(f"Error moving directory contents: {e}")
