@@ -102,6 +102,14 @@ The template generates a complete Python package with:
   - License files
   - REUSE compliance configuration
 
+### Existing File Handling
+
+When `use_current_directory` is set to `y`, the cookiecutter moves generated files into the current directory. If any files conflict:
+
+- **Dot-prefixed items** (`.git`, `.claude`, `.github`, `.gitignore`, `.env`, etc.) that already exist in the directory are **preserved**. They are never backed up or overwritten. This protects repository metadata, AI development skills, CI configuration, and other user-customized dot-files.
+- **Other conflicting files** (e.g., `README.md`, `LICENSE`) are backed up to a `repo.backup/` directory before being replaced by the generated versions.
+- **Non-conflicting files** already in the directory are left untouched.
+
 - **CI/CD**:
   - GitHub Actions workflow template for:
     - Linting and testing
