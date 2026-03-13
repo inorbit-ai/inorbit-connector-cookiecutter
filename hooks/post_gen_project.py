@@ -127,7 +127,10 @@ def move_directory_contents(src: Path, dst: Path):
         print(f"Lifting contents of {inner_dir.name}/ up into {src.name}/")
         for item in inner_dir.iterdir():
             _move(item, src)
-        inner_dir.rmdir()
+        if not any(inner_dir.iterdir()):
+            inner_dir.rmdir()
+        else:
+            print(f"Skipping removal of non-empty directory {inner_dir}")
 
 
 if __name__ == "__main__":

@@ -257,6 +257,39 @@ class TestMoveDirectoryContents:
             assert not (backup / ".claude").exists()
             assert not (backup / ".github").exists()
 
+    def test_preserves_dot_prefixed_items_during_lift(self, temp_dir):
+        """Test dot-prefixed preservation in nested-directory lift doesn't crash."""
+        src = temp_dir / "myconnector"
+        src.mkdir()
+        (src / "README.md").write_text("top-level readme")
+        (src / ".github").mkdir()
+        (src / ".github" / "workflows").mkdir()
+        (src / ".github" / "workflows" / "ci.yml").write_text("ci: generated")
+
+        # Nested directory with same name (triggers the lift logic)
+        nested = src / "myconnector"
+        nested.mkdir()
+        (nested / "connector.py").write_text("# connector")
+        (nested / ".github").mkdir()
+        (nested / ".github" / "workflows").mkdir()
+        (nested / ".github" / "workflows" / "ci.yml").write_text("ci: nested")
+
+        dst = temp_dir / "dest"
+        dst.mkdir()
+        (dst / ".github").mkdir()
+        (dst / ".github" / "CODEOWNERS").write_text("* @team")
+
+        move_directory_contents(src, dst)
+
+        # dst's .github should be preserved (not overwritten by src's .github)
+        assert (dst / ".github" / "CODEOWNERS").read_text() == "* @team"
+        # src's .github was preserved (not moved to dst), so it stays in src
+        assert (src / ".github" / "workflows" / "ci.yml").read_text() == "ci: generated"
+        # Lifted connector.py should be in src
+        assert (src / "connector.py").read_text() == "# connector"
+        # nested dir may not be fully removed if .github was left behind
+        # but the function should NOT crash
+
     def test_no_backup_dir_when_no_conflicts(self, temp_dir):
         """Test that no backup directory is created when there are no conflicts."""
         src = temp_dir / "source"
