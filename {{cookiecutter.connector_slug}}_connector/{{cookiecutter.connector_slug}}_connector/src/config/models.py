@@ -64,6 +64,9 @@ class {{cookiecutter.connector_slug_pascal}}Config(BaseSettings):
     fleet_port: int = 80
     fleet_username: str
     fleet_password: str
+    # Optional field examples:
+    # log_level: str | None = None
+    # timeout_seconds: int | None = None
 
 
 class {{cookiecutter.connector_slug_pascal}}ConnectorConfig(ConnectorConfig):

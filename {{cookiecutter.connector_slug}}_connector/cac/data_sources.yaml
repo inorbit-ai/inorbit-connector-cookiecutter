@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: 2026 {{ cookiecutter.author }}
+#
+# SPDX-License-Identifier: MIT
+
+# DataSourceDefinition objects configure how key-values are displayed in InOrbit.
+# Add one entry per key-value published in _execution_loop.
+# Battery: publish as a 0-1 float (divide raw 0-100 value by 100.0).
+
+# TODO: Add one DataSourceDefinition per published key-value. Examples:
+
+# kind: DataSourceDefinition
+# apiVersion: v0.1
+# metadata:
+#   id: battery
+#   # scope: tag/<ACCOUNT_ID>/<TAG_ID>
+# spec:
+#   label: Battery
+#   unit: '%'
+#   scale: 100    # connector publishes 0-1 float; scale to % for display
+#   source:
+#     keyValue:
+#       key: battery
+# ---
+# kind: DataSourceDefinition
+# apiVersion: v0.1
+# metadata:
+#   id: connector-version
+#   # scope: tag/<ACCOUNT_ID>/<TAG_ID>
+# spec:
+#   label: Connector Version
+#   source:
+#     keyValue:
+#       key: connector_version
