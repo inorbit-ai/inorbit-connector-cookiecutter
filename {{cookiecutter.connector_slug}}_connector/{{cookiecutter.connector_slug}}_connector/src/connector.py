@@ -8,11 +8,13 @@
 from typing import override
 
 # InOrbit
+from inorbit_connector.commands import CommandFailure, parse_custom_command_args
 from inorbit_connector.connector import (
     CommandResultCode,
     FleetConnector,
 )
 from inorbit_connector.models import MapConfigTemp
+from inorbit_edge.robot import COMMAND_CUSTOM_COMMAND
 
 # Local
 from {{cookiecutter.connector_slug}}_connector import __version__ as connector_version
@@ -81,8 +83,19 @@ class {{cookiecutter.connector_slug_pascal}}Connector(FleetConnector):
             f"  Options: {options}"
         )
 
-        # Call the result function to indicate success
-        options["result_function"](CommandResultCode.SUCCESS)
+        result_fn = options["result_function"]
+
+        if command_name == COMMAND_CUSTOM_COMMAND:
+            script_name, script_args = parse_custom_command_args(args)
+            # TODO: Import CustomScripts from .commands and add cases here
+            match script_name:
+                case _:
+                    raise CommandFailure(
+                        execution_status_details=f"Unknown command: {script_name}",
+                        stderr=f"Command '{script_name}' is not supported",
+                    )
+
+        result_fn(CommandResultCode.SUCCESS)
 
     @override
     async def fetch_robot_map(

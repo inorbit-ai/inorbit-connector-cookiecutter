@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2026 {{ cookiecutter.author }}
+#
+# SPDX-License-Identifier: MIT
+
+# ActionDefinition objects expose custom commands in the InOrbit UI.
+# Add one entry per command in src/commands.py CustomScripts.
+# The `filename` argument value must match the CustomScripts enum value exactly.
+# Scope: use `tag/<ACCOUNT_ID>/<TAG_ID>` to target a robot group.
+
+# TODO: Add one ActionDefinition per command. Example:
+# kind: ActionDefinition
+# apiVersion: v0.1
+# metadata:
+#   id: pause-robot
+#   # scope: tag/<ACCOUNT_ID>/<TAG_ID>
+# spec:
+#   label: Pause Robot
+#   group: Control
+#   type: RunScript
+#   arguments:
+#     - name: filename
+#       type: string
+#       value: pauseRobot
