@@ -20,7 +20,7 @@
 #   source:
 #     keyValue:
 #       key: battery
-
+# ---
 # kind: DataSourceDefinition
 # apiVersion: v0.1
 # metadata:
