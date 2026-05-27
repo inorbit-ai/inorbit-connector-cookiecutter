@@ -193,6 +193,9 @@ class TestMoveDirectoryContents:
         assert (backup_dir / "README.md").read_text() == "old readme"
         assert (backup_dir / "config" / "example.yaml").read_text() == "old config"
 
+        # Backup dir should contain a .gitignore with * to keep contents untracked
+        assert (backup_dir / ".gitignore").read_text() == "*\n"
+
     def test_leaves_non_conflicting_items_untouched(self, temp_dir):
         """Test that items in dst not present in src are left alone."""
         src = temp_dir / "source"
@@ -322,6 +325,7 @@ class TestMoveDirectoryContents:
         move_directory_contents(src, dst)
 
         assert (dst / "repo.backup.2" / "file.txt").read_text() == "old"
+        assert (dst / "repo.backup.2" / ".gitignore").read_text() == "*\n"
 
 
 class TestPostGenHookIntegration:
@@ -362,6 +366,7 @@ class TestPostGenHookIntegration:
 
         # Conflicting README should be backed up
         assert (parent / "repo.backup" / "README.md").read_text() == "# Old README"
+        assert (parent / "repo.backup" / ".gitignore").read_text() == "*\n"
 
         # Non-conflicting LICENSE should be untouched (not backed up)
         assert (parent / "LICENSE").read_text() == "MIT"
