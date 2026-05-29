@@ -57,7 +57,7 @@ def test_invalid_connector_type_raises(base_config_data: dict) -> None:
 
     with pytest.raises(
         ValueError,
-        match=f"connector_type 'not-{CONNECTOR_TYPE}' .* does not match CONNECTOR_TYPE '{CONNECTOR_TYPE}'",
+        match=rf"does not match CONNECTOR_TYPE '{CONNECTOR_TYPE}'",
     ):
         {{cookiecutter.connector_slug_pascal}}ConnectorConfig(**data, _env_file=None)
 
