@@ -8,11 +8,8 @@
 from typing import override
 
 # InOrbit
-from inorbit_connector.commands import CommandFailure, parse_custom_command_args
-from inorbit_connector.connector import (
-    CommandResultCode,
-    FleetConnector,
-)
+from inorbit_connector.commands import CommandFailure, CommandResultCode, parse_custom_command_args
+from inorbit_connector.connector import FleetConnector
 from inorbit_connector.models import MapConfigTemp
 from inorbit_edge.robot import COMMAND_CUSTOM_COMMAND
 

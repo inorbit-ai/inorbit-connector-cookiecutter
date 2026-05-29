@@ -34,7 +34,7 @@ x-{{cookiecutter.project_slug}}:
 
   # Connector-specific environment variables not present in config/.env
   environment:
-    - LOG_LEVEL=${LOG_LEVEL:-INFO}
+   - INORBIT_LOG_LEVEL=${INORBIT_LOG_LEVEL:-INFO}
 
   # Volume mounts. Defaults are usually sufficient.
   # Adjust as needed the left side filenames to the name and path of your config files.
