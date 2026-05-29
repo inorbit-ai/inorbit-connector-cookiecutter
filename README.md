@@ -129,7 +129,7 @@ This cookiecutter template includes tests to verify the post-generation hook and
 
 2. Run the tests:
    ```bash
-   uv run pytest tests/ -v
+   uv run pytest test/ -v
    ```
 
 ### Test Requirements
@@ -172,4 +172,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Email**: support@inorbit.ai
 
 <img width="6400" height="400" alt="image" src="https://github.com/user-attachments/assets/d50bbacf-6e6f-434a-9b44-8c743a6de1f9" />
-

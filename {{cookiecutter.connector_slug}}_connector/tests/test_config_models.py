@@ -31,6 +31,7 @@ def base_config_data() -> dict:
     """Return a minimal, valid {{cookiecutter.connector_slug_pascal}}ConnectorConfig payload."""
 
     return {
+        "api_key": "test-api-key",
         "connector_type": "{{cookiecutter.connector_slug}}",
         "connector_config": {
             "fleet_host": "fleet.example.com",
@@ -46,7 +47,7 @@ def base_config_data() -> dict:
 
 
 def test_connector_type_must_match(base_config_data: dict) -> None:
-    config = {{cookiecutter.connector_slug_pascal}}ConnectorConfig(**base_config_data)
+    config = {{cookiecutter.connector_slug_pascal}}ConnectorConfig(**base_config_data, _env_file=None)
     assert config.connector_type == CONNECTOR_TYPE
 
 
@@ -54,8 +55,11 @@ def test_invalid_connector_type_raises(base_config_data: dict) -> None:
     data = copy.deepcopy(base_config_data)
     data["connector_type"] = f"not-{CONNECTOR_TYPE}"
 
-    with pytest.raises(ValueError, match=f"Expected connector type '{CONNECTOR_TYPE}'"):
-        {{cookiecutter.connector_slug_pascal}}ConnectorConfig(**data)
+    with pytest.raises(
+        ValueError,
+        match=rf"does not match CONNECTOR_TYPE '{CONNECTOR_TYPE}'",
+    ):
+        {{cookiecutter.connector_slug_pascal}}ConnectorConfig(**data, _env_file=None)
 
 
 def test_unique_fleet_robot_ids_are_required(base_config_data: dict) -> None:
@@ -63,11 +67,11 @@ def test_unique_fleet_robot_ids_are_required(base_config_data: dict) -> None:
     data["fleet"][1]["fleet_robot_id"] = data["fleet"][0]["fleet_robot_id"]
 
     with pytest.raises(ValueError, match="fleet_robot_id values must be unique"):
-        {{cookiecutter.connector_slug_pascal}}ConnectorConfig(**data)
+        {{cookiecutter.connector_slug_pascal}}ConnectorConfig(**data, _env_file=None)
 
 
 def test_valid_config_instantiates_models(base_config_data: dict) -> None:
-    config = {{cookiecutter.connector_slug_pascal}}ConnectorConfig(**base_config_data)
+    config = {{cookiecutter.connector_slug_pascal}}ConnectorConfig(**base_config_data, _env_file=None)
 
     assert isinstance(config.connector_config, {{cookiecutter.connector_slug_pascal}}Config)
     assert all(isinstance(robot, {{cookiecutter.connector_slug_pascal}}RobotConfig) for robot in config.fleet)
@@ -87,6 +91,7 @@ def test_{{cookiecutter.connector_slug}}_config_reads_from_environment_variables
         fleet_host="env-fleet.example.com",
         fleet_username="env-user",
         fleet_password="env-pass",
+        _env_file=None,
     )
 
     assert config.fleet_host == "env-fleet.example.com"
@@ -109,6 +114,7 @@ def test_{{cookiecutter.connector_slug}}_config_prioritizes_yaml_over_environmen
         fleet_port=8080,
         fleet_username="yaml-user",
         fleet_password="yaml-pass",
+        _env_file=None,
     )
 
     assert config.fleet_host == "yaml-fleet.example.com"
@@ -130,6 +136,7 @@ def test_{{cookiecutter.connector_slug}}_config_uses_env_for_missing_fields(
         fleet_port=8080,
         fleet_username="env-user",
         fleet_password="env-pass",
+        _env_file=None,
     )
 
     assert config.fleet_host == "yaml-fleet.example.com"
@@ -144,6 +151,7 @@ def test_{{cookiecutter.connector_slug}}_config_default_port() -> None:
         fleet_host="fleet.example.com",
         fleet_username="test-user",
         fleet_password="test-pass",
+        _env_file=None,
     )
 
     assert config.fleet_port == 80

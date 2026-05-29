@@ -23,7 +23,7 @@ classifiers = [
     "Programming Language :: Python :: {{ cookiecutter.python_version }}",
 ]
 dependencies = [
-    "inorbit-connector[system-stats]~=2.2.0", # TODO: Replace with the latest version from https://github.com/inorbit-ai/inorbit-connector-python
+    "inorbit-connector[system-stats]~=3.0.0", # TODO: Replace with the latest version from https://github.com/inorbit-ai/inorbit-connector-python
     # Other runtime dependencies go here
 ]
 

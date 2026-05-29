@@ -9,17 +9,14 @@
 location_tz: America/Los_Angeles
 
 # Logging configuration
-logging:
-  log_level: INFO
+# logging:
+  # log_level: INFO
 
 # Connector type identifier
 connector_type: {{cookiecutter.connector_slug}}
 
 # Update frequency in Hz for the execution loop
 update_freq: 1.0
-
-# Account ID for the InOrbit account. Required to set the robot footprint and for annotation synchronization.
-# account_id:
 
 # {{ cookiecutter.connector_target }}-specific configuration
 # These fields are shared across all robots in the fleet
