@@ -97,6 +97,7 @@ def move_directory_contents(src: Path, dst: Path):
         if backup_dir is None:
             backup_dir = find_available_backup_dir(dst)
             backup_dir.mkdir(parents=True)
+            (backup_dir / ".gitignore").write_text("*\n")
             print(f"Backing up existing files to {backup_dir}")
         print(f"  Backing up {target.name}")
         move_item(target, backup_dir / target.name)
