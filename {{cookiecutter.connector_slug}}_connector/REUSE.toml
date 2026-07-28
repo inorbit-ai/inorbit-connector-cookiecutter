@@ -4,7 +4,8 @@
 
 version = 1
 SPDX-PackageName = "{{ cookiecutter.project_slug }}"
-SPDX-PackageSupplier = "https://github.com/{{ cookiecutter.github_author }}/{{ cookiecutter.project_slug }}"
+SPDX-PackageSupplier = "{{ cookiecutter.author }} <{{ cookiecutter.email }}>"
+SPDX-PackageDownloadLocation = "https://github.com/{{ cookiecutter.github_author }}/{{ cookiecutter.project_slug }}"
 
 # Configuration files that don't require copyright/license headers in the file itself
 # These are annotated here with MIT (same as the rest of the project)
