@@ -11,12 +11,11 @@ import copy
 import pytest
 
 from {{cookiecutter.connector_slug}}_connector.src.config.models import (
+    CONNECTOR_TYPE,
     {{cookiecutter.connector_slug_pascal}}Config,
     {{cookiecutter.connector_slug_pascal}}ConnectorConfig,
     {{cookiecutter.connector_slug_pascal}}RobotConfig,
-    CONNECTOR_TYPE,
 )
-
 
 REQUIRED_FLEET_CONFIG = {
     "fleet_host": "fleet.example.com",

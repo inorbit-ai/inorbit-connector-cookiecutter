@@ -83,7 +83,7 @@ class {{cookiecutter.connector_slug_pascal}}Connector(FleetConnector):
         result_fn = options["result_function"]
 
         if command_name == COMMAND_CUSTOM_COMMAND:
-            script_name, script_args = parse_custom_command_args(args)
+            script_name, script_args = parse_custom_command_args(args)  # noqa: RUF059
             # TODO: Import CustomScripts from .commands and add cases here
             match script_name:
                 case _:
@@ -116,7 +116,7 @@ class {{cookiecutter.connector_slug_pascal}}Connector(FleetConnector):
             # Fetch the map
 
             return MapConfigTemp(
-                image=bytes(),
+                image=b"",
                 map_id=frame_id,
                 map_label="",
                 origin_x=0.0,
@@ -124,7 +124,7 @@ class {{cookiecutter.connector_slug_pascal}}Connector(FleetConnector):
                 resolution=0.0,
             )
 
-        except Exception as ex:
+        except Exception as ex:  # noqa: BLE001
             self._logger.error(
                 f"Failed to fetch map '{frame_id}' from {{ cookiecutter.connector_target }} API: {ex}"
             )

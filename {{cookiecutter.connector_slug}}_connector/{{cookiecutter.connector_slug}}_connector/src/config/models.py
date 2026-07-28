@@ -5,10 +5,8 @@
 """Configuration models for {{ cookiecutter.connector_target }} connector."""
 
 # Third Party
-from pydantic import model_validator
-
-# InOrbit
 from inorbit_connector.models import ConnectorRootConfig, ConnectorSpecificConfig, RobotConfig
+from pydantic import model_validator
 
 CONNECTOR_TYPE = "{{cookiecutter.connector_slug}}"
 
