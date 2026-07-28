@@ -21,4 +21,3 @@ class CustomScripts(StrEnum):
     # TODO: Add command names, e.g.:
     # PAUSE_ROBOT = "pauseRobot"
     # RESUME_ROBOT = "resumeRobot"
-    pass
