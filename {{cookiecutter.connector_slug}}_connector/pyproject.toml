@@ -43,7 +43,6 @@ dev = [
     "tox-uv~=1.29",
     "colorlog~=6.10.1",
     "ruff~=0.16.0",
-    "bump-my-version~=1.2.4",
 ]
 
 [project.scripts]
